@@ -1,16 +1,14 @@
-local log = function(message, plr) outputChatBox( message, plr ) end
-
 orderedCodes = {
     {"10-0", "Negative"},
     {"10-1", "Affirmative"},
-    {"10-2", "Responding"},
+    {"10-2", "Responding to"},
     {"10-3", "Cancel"},
     {"10-4", "Roger"},
     {"10-5", "Copy that, confirm"},
     {"10-9", "Repeat last transmission, statement"},
 
     {"10-11", "Current Location: $loc"},
-    {"10-00", "Officer Down"},
+    {"10-00", "Officer Down at $loc $nwc criminal(s) spotted nearby"},
     {"10-01", "Soldier Down"},
     {"10-20", "Status"},
     {"10-21", "In Position"},
@@ -62,7 +60,39 @@ orderedCodes = {
     {"Code1", "Non-urgent situation at $loc"},
     {"Code2", "Urgent, Proceed immediately at $loc"},
     {"Code3", "Emergency, Proceed immediately with siren at $loc"},
-    {"Code4", "No further assistance required at $loc"}
+    {"Code4", "No further assistance required at $loc"},
+    "",
+    "Armed Robberies",
+    {"DTY", "Docks Train Yard"},
+    {"LSO", "LS Oil Rig"},
+    {"CS", "Construction Site"},
+    {"GY", "LS Graveyard"},
+    {"MY", "Movie Yard"},
+    {"NRH", "North Rock Hut"},
+    {"RB", "Rodeo Bank"},
+    {"PCB", "Palomino Creek Bank"},
+    {"BB", "Blueberry"},
+    {"CC", "LS County Club"},
+    {"LSA", "LS Airport Storage"},
+    "",
+    "Stores",
+    {"69C", "Idlewood 69"},
+    {"IB", "Idlewood Barber"},
+    {"GBC", "Ganton's Binco Clothing"},
+    {"JSU", "Jefferson Sub Urban's"},
+    {"DZC", "Downtown's Zip Clothing"},
+    {"MB", "Marina Barber"},
+    {"RV", "Rodeo Victims Clothing"},
+    {"RPC", "Rodeo Pro Laps Clothing"},
+    {"M24/7", "Mulholland 24/7"},
+    {"T24/7", "Temple 24/7"},
+    {"IP", "Idlewood Pizza"},
+    {"MAB", "Marina Burger"},
+    {"SMP", "Santa Maria Pizza"},
+    {"MTB", "Market Burger"},
+    {"MTP", "Market Pizza"},
+    {"ELSC", "East LS Chicken"},
+    {"TB", "Temple Burger"}
 }
 
 local DYNAMIC_CODE_PREFIX = "$"
@@ -85,10 +115,34 @@ function getCurrentVehicleName(plr)
     end
 end
 
+function getAmountOfNearbyCriminals(plr)
+    -- TODO: CIT specific implementation
+    -- Define nearby: Could be 50 units
+    return 0
+end
+
+function getVehichleTypeName(plr)
+    local veh = getPedOccupiedVehicle(plr)
+    if (veh) then
+        return getVehicleType(veh)
+    else
+        return "On foot"
+    end
+end
+
+function getCurrentOccupationName(plr)
+    -- TODO: CIT specific implementation
+    -- Occupation name such as Police Officer, Police Detective, FBI Agent, etc.
+    return "N/A"
+end
+
 orderedDynamicCodes = {
     {"loc", "Player's current location", getCurrentLocation},
     {"hp", "Player's current health", getCurrentHealth},
-    {"veh", "Player's current vehicle name or 'On foot' if not in a vehicle", getCurrentVehicleName}
+    {"veh", "Player's current vehicle name or 'On foot' if not in a vehicle", getCurrentVehicleName},
+    {"nwc", "Amount of nearby wanted criminals", getAmountOfNearbyCriminals},
+    {"vt", "Vehicle type name or 'On foot'", getVehichleTypeName},
+    {"occ", "Player's current occupation name", getCurrentOccupationName}
 }
 
 -- codes and dynamicCodes lookup tables being generated based on orderedCodes and orderedDynamicCodes
@@ -137,17 +191,3 @@ function convertDynamicCodes(message, plr)
     message = table.concat(temp, " ")
     return message
 end
-
--- function listCodes(plr, cmd, params)
---     log("Static codes: (Prefix: " .. STATIC_CODE_PREFIX .. ")", plr)
---     for k,v in pairs(codes) do
---         log(k .. ": " .. v, plr)
---     end
---     log("", plr)
-
---     log("Dynamic codes: (Prefix: " .. DYNAMIC_CODE_PREFIX .. ")", plr)
---     for k,v in pairs(dynamicCodes) do
---         log(k .. ": " .. v[1] .. " Current result: " .. v[2](plr), plr)
---     end
--- end
--- addCommandHandler( "codes", listCodes)

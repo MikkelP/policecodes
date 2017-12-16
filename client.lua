@@ -61,7 +61,10 @@ function createAbsoluteCodesWindow()
         guiButtonClipBoard = guiCreateButton(10, 476, 128, 39, "Copy To Clipboard", false, guiWindow)    
         addEventHandler("onClientGUIClick", guiButtonClose, closeCodesWindow, false)
         addEventHandler("onClientGUIClick", guiButtonClipBoard, addToClipBoard, false)
-        guiWindowSetSizable(guiWindow, true)
+        guiWindowSetSizable(guiWindow, false)
+
+        guiGridListSetScrollBars(guiGridListDynamic, true, true)
+        guiGridListSetScrollBars(guiGridListStatic, true, true)
     end
 end
 
@@ -79,8 +82,8 @@ function createRelativeCodesWindow()
         guiGridListAddColumn(guiGridListStatic, "Code", 0.5)
         guiGridListAddColumn(guiGridListStatic, "Translation", 0.5)
 
-        guiGridListSetColumnWidth(guiGridListStatic, 1, 110, false)
-        guiGridListSetColumnWidth(guiGridListStatic, 2, 450, false)
+        guiGridListSetColumnWidth(guiGridListStatic, 1, 0.177, true)
+        guiGridListSetColumnWidth(guiGridListStatic, 2, 1, true)
 
         local number = 0
         for i,v in ipairs(orderedCodes) do
@@ -119,7 +122,9 @@ function createRelativeCodesWindow()
         addEventHandler("onClientGUIClick", guiButtonClose, closeCodesWindow, false)
         addEventHandler("onClientGUIClick", guiButtonClipBoard, addToClipBoard, false)
 
-        guiWindowSetSizable(guiWindow, true)
+        guiWindowSetSizable(guiWindow, false)
+        guiGridListSetScrollBars(guiGridListDynamic, true, true)
+        guiGridListSetScrollBars(guiGridListStatic, true, true)
     end
 end
 
@@ -165,3 +170,8 @@ function emergencyChat(cmdName, ...)
     
 end
 addCommandHandler("e", emergencyChat)
+
+-- function bla()
+--     outputChatBox("col1: " .. guiGridListGetColumnWidth(guiGridListStatic, 1, true) .. " col2: " .. guiGridListGetColumnWidth(guiGridListStatic, 2, true))
+-- end
+-- addCommandHandler("grid", bla)
