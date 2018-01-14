@@ -1,5 +1,3 @@
 <meta>
-<info author="MHP" version="1" name="policecodes" description="Convert police codes to text" type="script"/>
-    <script src="shared.lua" type="shared" />
-    <script src="client.lua" type="client"/>
+<script src="policeCodes.lua" type="client"/>
 </meta>>
