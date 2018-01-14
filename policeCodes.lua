@@ -98,31 +98,43 @@ local orderedCodes = {
 local DYNAMIC_CODE_PREFIX = "$"
 local STATIC_CODE_PREFIX = "#"
 
-function getCurrentLocation(plr)
-	return getZoneName(getElementPosition(plr))
+function getCurrentLocation()
+	-- TODO: Interior considerations (possibly dim too)
+	local x, y, z = getElementPosition(localPlayer)
+	return exports.CITmapMisc:getZoneName2(x, y, z) or getZoneName(x, y, z)
 end
 
-function getCurrentHealth(plr)
-	return getElementHealth( plr )
+function getCurrentHealth()
+	return getElementHealth(localPlayer)
 end
 
-function getCurrentVehicleName(plr)
-	local veh = getPedOccupiedVehicle( plr )
+function getCurrentVehicleName()
+	local veh = getPedOccupiedVehicle(localPlayer)
 	if (veh) then
-		return getVehicleName( veh )
+	--getVehicleNameFromModel: (getElementData(root, "VehNameFromModel")[ID] or getVehicleNameFromModel(ID))
+	--getVehicleModelFromName: (getElementData(root, "VehModelFromName")[carName] or getVehicleModelFromName(carName))
+		local modelId = getElementModel(veh)
+		return (getElementData(root, "VehNameFromModel")[modelId] or getVehicleNameFromModel(modelId))
 	else
 		return "On foot";
 	end
 end
 
-function getAmountOfNearbyCriminals(plr)
-	-- TODO: CIT specific implementation
-	-- Define nearby: Could be 50 units
-	return 0
+function getAmountOfNearbyCriminals()
+	local myX, myY, myZ = getElementPosition(localPlayer)
+	local players = getElementsByType("player", root, true)
+	local count = 0
+	for i,plr in ipairs(players) do
+		local x, y, z = getElementPosition(plr)
+		if (plr ~= localPlayer and getDistanceBetweenPoints3D(x, y, z, myX, myY, myZ) < 50 and (getElementData(plr, "w") or 0) > 0) then
+			count = count + 1
+		end
+	end
+	return count
 end
 
-function getVehichleTypeName(plr)
-	local veh = getPedOccupiedVehicle(plr)
+function getVehichleTypeName()
+	local veh = getPedOccupiedVehicle(localPlayer)
 	if (veh) then
 		return getVehicleType(veh)
 	else
@@ -130,10 +142,12 @@ function getVehichleTypeName(plr)
 	end
 end
 
-function getCurrentOccupationName(plr)
-	-- TODO: CIT specific implementation
-	-- Occupation name such as Police Officer, Police Detective, FBI Agent, etc.
-	return "N/A"
+function getCurrentOccupationName()
+	return getElementData(localPlayer, "o") or "N/A"
+end
+
+function getAmountOfPlayersUnderArrest()
+	return exports.CITpoliceArrest:getPlayerPrisonerCount(localPlayer) or 0
 end
 
 orderedDynamicCodes = {
@@ -142,7 +156,8 @@ orderedDynamicCodes = {
 	{"veh", "Player's current vehicle name or 'On foot' if not in a vehicle", getCurrentVehicleName},
 	{"nwc", "Amount of nearby wanted criminals", getAmountOfNearbyCriminals},
 	{"vt", "Vehicle type name or 'On foot'", getVehichleTypeName},
-	{"occ", "Player's current occupation name", getCurrentOccupationName}
+	{"occ", "Player's current occupation name", getCurrentOccupationName},
+	{"pri", "Amount of players currently under arrest", getAmountOfPlayersUnderArrest}
 }
 
 local screenW, screenH = guiGetScreenSize()
@@ -338,14 +353,14 @@ function convertStaticCodes(message)
 	return message
 end
 
-function convertDynamicCodes(message, plr)
+function convertDynamicCodes(message)
 	local temp = split( message, " " )
 	for i,v in ipairs(temp) do
 		if (string.sub(v,1,1) == DYNAMIC_CODE_PREFIX) then
 			local key = string.sub(v, 2)
 			if (dynamicCodes[key]) then
 				-- Example for $loc: key = loc, v = $loc. Key used to lookup in table. v is with the prefix added ($)
-				local convertedMessage = dynamicCodes[key][2](plr) --.. " (" .. key .. ")"
+				local convertedMessage = dynamicCodes[key][2]() --.. " (" .. key .. ")"
 				temp[i] = convertedMessage
 			end
 		end
@@ -359,7 +374,7 @@ function emergencyChat(cmdName, ...)
 	local message = table.concat({...}, " ")
 	local result = convertStaticCodes(message)
 	outputChatBox( "[INPUT]#AAAAAA " .. message, 100, 255, 100, true )
-	result = convertDynamicCodes(result, plr)
+	result = convertDynamicCodes(result)
 	outputChatBox( "[OUTPUT]#FFFFFF " .. result, 100, 100, 255, true)
 end
 addCommandHandler("e", emergencyChat)
