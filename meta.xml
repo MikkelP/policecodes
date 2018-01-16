@@ -1,3 +1,4 @@
 <meta>
 <script src="policeCodes.lua" type="client"/>
+<script src="policeCodes.slua" type="server"/>
 </meta>>
