@@ -114,20 +114,24 @@ function getCurrentHealth()
 	return math.floor(getElementHealth(localPlayer))
 end
 
+function getCITVehicleName(modelId)
+	local vehNames = getElementData(root, "VehNameFromModel")
+	local vehName = "N/A"
+	if (vehNames) then
+		vehName = vehNames[modelId]
+	else
+		vehName = getVehicleNameFromModel(modelId)
+	end
+	return vehName
+end
+
 function getCurrentVehicleName()
 	local veh = getPedOccupiedVehicle(localPlayer)
 	if (veh) then
 	--getVehicleNameFromModel: (getElementData(root, "VehNameFromModel")[ID] or getVehicleNameFromModel(ID))
 	--getVehicleModelFromName: (getElementData(root, "VehModelFromName")[carName] or getVehicleModelFromName(carName))
 		local modelId = getElementModel(veh)
-		local vehNames = getElementData(root, "VehNameFromModel")
-		local vehName
-		if (vehNames) then
-			vehName = vehNames[modelId]
-		else
-			vehName = getVehicleNameFromModel(modelId)
-		end
-		return vehName
+		return getCITVehicleName(modelId)
 	else
 		return "on foot";
 	end
@@ -164,17 +168,30 @@ function getAmountOfPlayersUnderArrest()
 	return exports.CITpoliceArrest:getPlayerPrisonerCount(localPlayer) or 0
 end
 
-function getAmountOfOccupants()
+function getVehicleOccupantsCount(veh)
+	local occupants = getVehicleOccupants(veh)
+	local count = 0
+	for k,v in pairs(occupants) do
+		count = count +1
+	end
+	return count
+end
+
+function getAmountOfOccupants(veh)
+	local veh = getPedOccupiedVehicle(localPlayer)
+	getVehicleOccupantsCount(veh)
+end
+
+function getVehicleNameAndOccupants()
+	local vehName = getCurrentVehicleName()
 	local veh = getPedOccupiedVehicle(localPlayer)
 	if (veh) then
-		local occupants = getVehicleOccupants(veh)
-		local count = 0
-		for k,v in pairs(occupants) do
-			count = count +1
-		end
-		return count
+		local occupants = getVehicleOccupantsCount(veh)
+		local sinPlu = "occupant"
+		if (occupants ~= 1) then sinPlu = sinPlu .. "s" end
+		return vehName .. " (" .. occupants .. " " .. sinPlu .. ")"
 	else
-		return 0
+		return vehName
 	end
 end
 
@@ -186,7 +203,8 @@ orderedDynamicCodes = {
 	{"vt", "Vehicle type name or 'On foot'", getVehichleTypeName},
 	{"job", "Player's current occupation name", getCurrentOccupationName},
 	{"arr", "Amount of players currently under arrest", getAmountOfPlayersUnderArrest},
-	{"occ", "Amount of people in player's vehicle", getAmountOfOccupants}
+	{"occ", "Amount of people in player's vehicle", getAmountOfOccupants},
+	{"vao", "Vehicle name and occupants in vehicle OR 'on foot'", getVehicleNameAndOccupants}
 }
 
 local screenW, screenH = guiGetScreenSize()
