@@ -60,10 +60,17 @@ local orderedCodes = {
 	{"3000", "Roadblock"},
 	"",
 	"Situation Codes",
-	{"Code1", "Non-urgent situation at " .. dynamicCodePrefix .. "loc"},
-	{"Code2", "Urgent, Proceed immediately at " .. dynamicCodePrefix .. "loc"},
-	{"Code3", "Emergency, Proceed immediately with siren at " .. dynamicCodePrefix .. "loc"},
-	{"Code4", "No further assistance required at " .. dynamicCodePrefix .. "loc"},
+	{"Code1", "Code 1 - Non-urgent situation"},
+	{"Code2", "Code 2 - Urgent, Proceed immediately"},
+	{"Code3", "Code 3 - Emergency, Proceed immediately with siren"},
+	{"Code4", "Code 4 - No further assistance required"},
+	"",
+	{"purple", "Code Purple - Riot Activity"},
+	{"yellow", "Code Yellow - Chasing the target"},
+	{"blue", "Code Blue - Training taking place"},
+	{"red", "Code Red - Criminal Event"},
+	{"black", "Code Black - Crisis is in effect"},
+	{"green", "Code Green - Armed Robbery on-progress"},
 	"",
 	"Armed Robberies",
 	{"DTY", "Docks Train Yard"},
@@ -195,6 +202,53 @@ function getVehicleNameAndOccupants()
 	end
 end
 
+-- Taken from another one of my scripts
+local directionNames = {
+	{"NW", "W", "SW", "S", "SE", "E", "NE", "N"},
+	{"North West", "West", "South West", "South", "South East", "East", "North East", "North"}
+}
+
+function getDirectionNameFromAngle(angle, resultType)
+	if(resultType ~= 1 and resultType ~= 2) then
+		resultType = 1
+	end
+	if (angle > 360 or angle < 0) then
+		return "N/A"
+	end
+	if(angle >= 22.5 and angle < 67.5) then
+		return directionNames[resultType][1]
+	end
+	if(angle >= 67.5 and angle < 112.5) then
+		return directionNames[resultType][2]
+	end
+	if(angle >= 112.5 and angle < 157.5) then
+		return directionNames[resultType][3]
+	end
+	if(angle >= 157.5 and angle < 202.5) then
+		return directionNames[resultType][4]
+	end
+	if(angle >= 202.5 and angle < 247.5) then
+		return directionNames[resultType][5]
+	end
+	if(angle >= 247.5 and angle < 292.5) then
+		return directionNames[resultType][6]
+	end
+	if(angle >= 292.5 and angle < 337.5) then
+		return directionNames[resultType][7]
+	end
+	if(angle >= 337.5 or angle < 22.5) then
+		return directionNames[resultType][8]
+	end
+	return "N/A"
+end
+
+function getCurrentCardinalDirection()
+	local elem = getPedOccupiedVehicle(localPlayer) or localPlayer
+	-- print("bla: " .. elem)
+	local a, a, z = getElementRotation(elem, "ZYX")
+	return getDirectionNameFromAngle(z, 2)
+end
+
 orderedDynamicCodes = {
 	{"loc", "Player's current location", getCurrentLocation},
 	{"hp", "Player's current health", getCurrentHealth},
@@ -204,7 +258,8 @@ orderedDynamicCodes = {
 	{"job", "Player's current occupation name", getCurrentOccupationName},
 	{"arr", "Amount of players currently under arrest", getAmountOfPlayersUnderArrest},
 	{"occ", "Amount of people in player's vehicle", getAmountOfOccupants},
-	{"vao", "Vehicle name and occupants in vehicle OR 'on foot'", getVehicleNameAndOccupants}
+	{"vao", "Vehicle name and occupants in vehicle OR 'on foot'", getVehicleNameAndOccupants},
+	{"dir", "Name of direction player's vehicle or character is facing", getCurrentCardinalDirection}
 }
 
 local screenW, screenH = guiGetScreenSize()
@@ -219,7 +274,7 @@ function createRelativeCodesWindow()
 
 		guiTabStatic = guiCreateTab("Static", guiTabPanel)
 
-		guiLabelStatic = guiCreateLabel(0.02, 0.02, 0.97, 0.14, "To write a static code you must add " .. staticCodePrefix .. " in front.\nExample: If you write: " .. staticCodePrefix .. "10-4\nOutput is: Roger (10-4)", true, guiTabStatic)
+		guiLabelStatic = guiCreateLabel(0.02, 0.02, 0.97, 0.14, "To write a static code you must add " .. staticCodePrefix .. " in front of every code.\nExample: If you write: " .. staticCodePrefix .. "10-4\nOutput is: Roger (10-4)", true, guiTabStatic)
 		guiGridListStatic = guiCreateGridList(0.02, 0.19, 0.97, 0.79, true, guiTabStatic)
 		guiGridListAddColumn(guiGridListStatic, "Code", 0.5)
 		guiGridListAddColumn(guiGridListStatic, "Translation", 0.5)
@@ -242,7 +297,7 @@ function createRelativeCodesWindow()
 
 		guiTabDynamic = guiCreateTab("Dynamic", guiTabPanel)
 
-		guiLabelDynamic = guiCreateLabel(0.02, 0.02, 0.97, 0.14, "To write a dynamic code you must add " .. dynamicCodePrefix .. ".in front.\nExample: You are in Idlewood and write: " .. dynamicCodePrefix .. "loc\nOutput is: Idlewood", true, guiTabDynamic)
+		guiLabelDynamic = guiCreateLabel(0.02, 0.02, 0.97, 0.14, "To write a dynamic code you must add " .. dynamicCodePrefix .. " in front of every code.\nExample: You are in Idlewood and write: " .. dynamicCodePrefix .. "loc\nOutput is: Idlewood", true, guiTabDynamic)
 		guiGridListDynamic = guiCreateGridList(0.02, 0.19, 0.97, 0.79, true, guiTabDynamic)
 		guiGridListAddColumn(guiGridListDynamic, "Code", 0.5)
 		guiGridListAddColumn(guiGridListDynamic, "Description", 0.5)
@@ -322,6 +377,7 @@ function convertStaticCodes(message)
 	for i,v in ipairs(temp) do
 		if (string.sub(v,1,1) == staticCodePrefix) then
 			local key = string.sub(v, 2)
+			key = string.gsub(key, "[,.!)(]", "")
 			if (codes[key]) then
 				-- outputChatBox( "Code found!: " .. v .. ": " .. codes[v], plr)
 				local convertedMessage = codes[key] .. " (" .. key .. ")"
@@ -338,6 +394,7 @@ function convertDynamicCodes(message)
 	for i,v in ipairs(temp) do
 		if (string.sub(v,1,1) == dynamicCodePrefix) then
 			local key = string.sub(v, 2)
+			key = string.gsub(key, "[,.!)(]", "")
 			if (dynamicCodes[key]) then
 				-- Example for $loc: key = loc, v = $loc. Key used to lookup in table. v is with the prefix added (dynamicCodePrefix)
 				local convertedMessage = dynamicCodes[key][2]() --.. " (" .. key .. ")"
