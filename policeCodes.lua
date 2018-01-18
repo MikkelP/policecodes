@@ -9,7 +9,7 @@ local orderedCodes = {
 	{"10-4", "Roger"},
 	{"10-5", "Copy that"},
 	{"10-9", "Repeat last transmission, statement"},
-
+	"",
 	{"10-11", "Current Location: " .. dynamicCodePrefix .. "loc"},
 	{"10-00", "Officer Down at " .. dynamicCodePrefix .. "loc " .. dynamicCodePrefix .. "nwc criminal(s) spotted nearby"},
 	{"10-01", "Soldier Down at " .. dynamicCodePrefix .. "loc"},
@@ -21,7 +21,7 @@ local orderedCodes = {
 	{"10-25", "Covering Fire"},
 	{"10-26", "Clear"},
 	{"10-27", "Proceed with caution"},
-	{"10-28", "In Pursuit, $vao at " .. dynamicCodePrefix .. "loc going $dir"},
+	{"10-28", "In Pursuit, " .. dynamicCodePrefix .. "vao at " .. dynamicCodePrefix .. "loc going " .. dynamicCodePrefix .. "dir"},
 	{"10-29", "Aborting Pursuit at " .. dynamicCodePrefix .. "loc"},
 	{"10-30", "Suspect Down, in Custody"},
 	"",
@@ -127,7 +127,7 @@ function getCurrentLocation()
 	local result = ""
 	if (int ~= 0) then
 		result = "interior in "
-		x, y, z = exports.CITutil:getLastPosition(plr) --Returns x, y, z of where they were last when outside (so you can see what interior they entered)
+		x, y, z = exports.CITutil:getLastPosition(localPlayer) --Returns x, y, z of where they were last when outside (so you can see what interior they entered)
 	end
 	result = result .. (exports.CITmapMisc:getZoneName2(x, y, z) or getZoneName(x, y, z))
 	return result
@@ -164,10 +164,9 @@ function getAmountOfNearbyCriminals()
 	local myX, myY, myZ = getElementPosition(localPlayer)
 	local players = getElementsByType("player", root, true)
 	local count = 0
-	for i,plr in ipairs(players) do
+	for i, plr in ipairs(players) do
 		local x, y, z = getElementPosition(plr)
-		if (plr ~= localPlayer and getDistanceBetweenPoints3D(x, y, z, myX, myY, myZ) < 50 and (getElementData(plr, "w") or 0) > 0
-		and getElementDimension(localPlayer) == getElementDimension(plr)) then
+		if (plr ~= localPlayer and getDistanceBetweenPoints3D(x, y, z, myX, myY, myZ) < 50 and (getElementData(plr, "w") or 0) > 0) then
 			count = count + 1
 		end
 	end
@@ -194,15 +193,19 @@ end
 function getVehicleOccupantsCount(veh)
 	local occupants = getVehicleOccupants(veh)
 	local count = 0
-	for k,v in pairs(occupants) do
-		count = count +1
+	for k, v in pairs(occupants) do
+		count = count + 1
 	end
 	return count
 end
 
-function getAmountOfOccupants(veh)
+function getAmountOfOccupants()
 	local veh = getPedOccupiedVehicle(localPlayer)
-	getVehicleOccupantsCount(veh)
+	if (veh) then
+		return getVehicleOccupantsCount(veh)
+	else
+		return 0
+	end
 end
 
 function getVehicleNameAndOccupants()
@@ -212,13 +215,11 @@ function getVehicleNameAndOccupants()
 		local occupants = getVehicleOccupantsCount(veh)
 		local sinPlu = "occupant"
 		if (occupants ~= 1) then sinPlu = sinPlu .. "s" end
-		return vehName .. " (" .. occupants .. " " .. sinPlu .. ")"
-	else
-		return vehName
+		vehName = vehName .. " (" .. occupants .. " " .. sinPlu .. ")"
 	end
+	return vehName
 end
 
--- Taken from another one of my scripts
 local directionNames = {
 	{"NW", "W", "SW", "S", "SE", "E", "NE", "N"},
 	{"North West", "West", "South West", "South", "South East", "East", "North East", "North"}
@@ -260,7 +261,6 @@ end
 
 function getCurrentCardinalDirection()
 	local elem = getPedOccupiedVehicle(localPlayer) or localPlayer
-	-- print("bla: " .. elem)
 	local a, a, z = getElementRotation(elem, "ZYX")
 	return getDirectionNameFromAngle(z, 2)
 end
@@ -363,7 +363,6 @@ function addToClipBoard()
 			str = str .. "\n" .. v[1] .. " - " .. v[2]
 		end
 	end
-
 	str = str .. "\n\nDynamic codes:"
 	for i,v in pairs(orderedDynamicCodes) do
 		str = str .. "\n" .. v[1] .. " - " .. v[2]
@@ -395,7 +394,6 @@ function convertStaticCodes(message)
 			local key = string.sub(v, 2)
 			key = string.gsub(key, "[,.!)(]", "")
 			if (codes[key]) then
-				-- outputChatBox( "Code found!: " .. v .. ": " .. codes[v], plr)
 				local convertedMessage = codes[key] .. " (" .. key .. ")"
 				temp[i] = convertedMessage
 			end
@@ -413,7 +411,7 @@ function convertDynamicCodes(message)
 			key = string.gsub(key, "[,.!)(]", "")
 			if (dynamicCodes[key]) then
 				-- Example for $loc: key = loc, v = $loc. Key used to lookup in table. v is with the prefix added (dynamicCodePrefix)
-				local convertedMessage = dynamicCodes[key][2]() --.. " (" .. key .. ")"
+				local convertedMessage = dynamicCodes[key][2]()
 				temp[i] = convertedMessage
 			end
 		end
