@@ -4,7 +4,7 @@ AR codes
 
 Dynamic strings
 $loc
-$nbo
+$nwc
 
 GUI two tabs:
 static and dynamic codes.
