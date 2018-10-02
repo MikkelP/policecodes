@@ -1,12 +1,13 @@
 10 codes
 Location codes
 AR codes
+Stores
 
 Dynamic strings
 $loc
 $nwc
 $dir
-
+$veh
 
 GUI two tabs:
 static and dynamic codes.
