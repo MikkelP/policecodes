@@ -5,6 +5,8 @@ AR codes
 Dynamic strings
 $loc
 $nwc
+$dir
+
 
 GUI two tabs:
 static and dynamic codes.
